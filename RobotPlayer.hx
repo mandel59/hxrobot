@@ -11,7 +11,7 @@ class RobotPlayer {
 	static var program = "dx(t(-x6rk+)(f))
 dk(t(-x2rk+)(f))
 dw(cxw)
-chn20f2r20f6ra-10+w";
+chn20j2r20j6ra-10+w";
 
 	var svg : SVGElement;
 	var ta : TextAreaElement;
