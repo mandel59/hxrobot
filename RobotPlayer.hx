@@ -21,7 +21,12 @@ chn20j2r20j6ra-10+w";
 	function new() {
 		svg = cast(Browser.document.getElementById("robot"));
 		ta = cast(Browser.document.getElementById("program"));
-		ta.value = program;
+		var s = StringTools.urlDecode(Browser.location.search);
+		if (s.length > 0) {
+			ta.value = s.substr(1);
+		} else {
+			ta.value = program;
+		}
 		ta.addEventListener("change", onchange);
 		start();
 	}
