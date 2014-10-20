@@ -3,7 +3,6 @@ var EReg = function(r,opt) {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
 };
-EReg.__name__ = true;
 EReg.prototype = {
 	match: function(s) {
 		if(this.r.global) this.r.lastIndex = 0;
@@ -21,7 +20,6 @@ EReg.prototype = {
 	}
 };
 var HxOverrides = function() { };
-HxOverrides.__name__ = true;
 HxOverrides.cca = function(s,index) {
 	var x = s.charCodeAt(index);
 	if(x != x) return undefined;
@@ -36,24 +34,23 @@ HxOverrides.substr = function(s,pos,len) {
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
 };
-HxOverrides.iter = function(a) {
-	return { cur : 0, arr : a, hasNext : function() {
-		return this.cur < this.arr.length;
-	}, next : function() {
-		return this.arr[this.cur++];
-	}};
-};
 var IMap = function() { };
-IMap.__name__ = true;
 var RobotPlayer = function() {
-	this.svg = window.document.getElementById("robot");
+	var canvas = window.document.getElementById("robot");
+	this.ctx = canvas.getContext("2d");
+	this.width = 100;
+	this.height = 100;
+	this.scale = canvas.width / this.width;
+	this.ctx.translate(canvas.width / 2,canvas.height / 2);
+	this.ctx.scale(this.scale,-this.scale);
+	this.ctx.strokeStyle = "black";
+	this.ctx.lineWidth = 1 / this.scale;
 	this.ta = window.document.getElementById("program");
 	var s = decodeURIComponent(window.location.search.split("+").join(" "));
 	if(s.length > 0) this.ta.value = HxOverrides.substr(s,1,null); else this.ta.value = RobotPlayer.program;
 	this.ta.addEventListener("change",$bind(this,this.onchange));
 	this.start();
 };
-RobotPlayer.__name__ = true;
 RobotPlayer.onload = function(e) {
 	new RobotPlayer();
 };
@@ -76,23 +73,13 @@ RobotPlayer.prototype = {
 		}
 	}
 	,clear: function() {
-		while(this.svg.firstChild != null) this.svg.removeChild(this.svg.firstChild);
+		this.ctx.clearRect(-this.width / 2,-this.height / 2,this.width,this.height);
 	}
 	,line: function(x1,y1,x2,y2) {
-		var l = window.document.createElementNS("http://www.w3.org/2000/svg","line");
-		var attrs;
-		var _g = new haxe.ds.StringMap();
-		_g.set("x1",x1);
-		_g.set("y1",y1);
-		_g.set("x2",x2);
-		_g.set("y2",y2);
-		attrs = _g;
-		var $it0 = attrs.keys();
-		while( $it0.hasNext() ) {
-			var k = $it0.next();
-			l.setAttribute(k,Std.string(attrs.get(k)));
-		}
-		this.svg.appendChild(l);
+		this.ctx.beginPath();
+		this.ctx.moveTo(x1,y1);
+		this.ctx.lineTo(x2,y2);
+		this.ctx.stroke();
 	}
 	,run: function() {
 		var _g = 0;
@@ -110,10 +97,6 @@ RobotPlayer.prototype = {
 	}
 };
 var Std = function() { };
-Std.__name__ = true;
-Std.string = function(s) {
-	return js.Boot.__string_rec(s,"");
-};
 Std.parseInt = function(x) {
 	var v = parseInt(x,10);
 	if(v == 0 && (HxOverrides.cca(x,1) == 120 || HxOverrides.cca(x,1) == 88)) v = parseInt(x);
@@ -121,7 +104,6 @@ Std.parseInt = function(x) {
 	return v;
 };
 var StringTools = function() { };
-StringTools.__name__ = true;
 StringTools.isSpace = function(s,pos) {
 	var c = HxOverrides.cca(s,pos);
 	return c > 8 && c < 14 || c == 32;
@@ -139,7 +121,6 @@ haxe.Timer = function(time_ms) {
 		me.run();
 	},time_ms);
 };
-haxe.Timer.__name__ = true;
 haxe.Timer.prototype = {
 	stop: function() {
 		if(this.id == null) return;
@@ -150,14 +131,13 @@ haxe.Timer.prototype = {
 	}
 };
 haxe.ds = {};
-haxe.ds.Option = { __ename__ : true, __constructs__ : ["Some","None"] };
+haxe.ds.Option = { __constructs__ : ["Some","None"] };
 haxe.ds.Option.Some = function(v) { var $x = ["Some",0,v]; $x.__enum__ = haxe.ds.Option; return $x; };
 haxe.ds.Option.None = ["None",1];
 haxe.ds.Option.None.__enum__ = haxe.ds.Option;
 haxe.ds.StringMap = function() {
 	this.h = { };
 };
-haxe.ds.StringMap.__name__ = true;
 haxe.ds.StringMap.__interfaces__ = [IMap];
 haxe.ds.StringMap.prototype = {
 	set: function(key,value) {
@@ -169,88 +149,10 @@ haxe.ds.StringMap.prototype = {
 	,exists: function(key) {
 		return this.h.hasOwnProperty("$" + key);
 	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
-		}
-		return HxOverrides.iter(a);
-	}
-};
-var js = {};
-js.Boot = function() { };
-js.Boot.__name__ = true;
-js.Boot.__string_rec = function(o,s) {
-	if(o == null) return "null";
-	if(s.length >= 5) return "<...>";
-	var t = typeof(o);
-	if(t == "function" && (o.__name__ || o.__ename__)) t = "object";
-	switch(t) {
-	case "object":
-		if(o instanceof Array) {
-			if(o.__enum__) {
-				if(o.length == 2) return o[0];
-				var str = o[0] + "(";
-				s += "\t";
-				var _g1 = 2;
-				var _g = o.length;
-				while(_g1 < _g) {
-					var i = _g1++;
-					if(i != 2) str += "," + js.Boot.__string_rec(o[i],s); else str += js.Boot.__string_rec(o[i],s);
-				}
-				return str + ")";
-			}
-			var l = o.length;
-			var i1;
-			var str1 = "[";
-			s += "\t";
-			var _g2 = 0;
-			while(_g2 < l) {
-				var i2 = _g2++;
-				str1 += (i2 > 0?",":"") + js.Boot.__string_rec(o[i2],s);
-			}
-			str1 += "]";
-			return str1;
-		}
-		var tostr;
-		try {
-			tostr = o.toString;
-		} catch( e ) {
-			return "???";
-		}
-		if(tostr != null && tostr != Object.toString) {
-			var s2 = o.toString();
-			if(s2 != "[object Object]") return s2;
-		}
-		var k = null;
-		var str2 = "{\n";
-		s += "\t";
-		var hasp = o.hasOwnProperty != null;
-		for( var k in o ) {
-		if(hasp && !o.hasOwnProperty(k)) {
-			continue;
-		}
-		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__" || k == "__properties__") {
-			continue;
-		}
-		if(str2.length != 2) str2 += ", \n";
-		str2 += s + k + " : " + js.Boot.__string_rec(o[k],s);
-		}
-		s = s.substring(1);
-		str2 += "\n" + s + "}";
-		return str2;
-	case "function":
-		return "<function>";
-	case "string":
-		return o;
-	default:
-		return String(o);
-	}
 };
 var language = {};
 language.robot = {};
 language.robot.Parser = function() { };
-language.robot.Parser.__name__ = true;
 language.robot.Parser.parse = function(s) {
 	var st = language.robot.Parser.parseStmts(s);
 	if(StringTools.ltrim(st._1).length > 0) throw "syntax error";
@@ -337,7 +239,7 @@ language.robot.Parser.parseStmts = function(s) {
 		return { _0 : language.robot.SList.Cons(s0._0,s1._0), _1 : s1._1};
 	}
 };
-language.robot.Direction = { __ename__ : true, __constructs__ : ["North","NorthEast","East","SouthEast","South","SouthWest","West","NorthWest"] };
+language.robot.Direction = { __constructs__ : ["North","NorthEast","East","SouthEast","South","SouthWest","West","NorthWest"] };
 language.robot.Direction.North = ["North",0];
 language.robot.Direction.North.__enum__ = language.robot.Direction;
 language.robot.Direction.NorthEast = ["NorthEast",1];
@@ -355,7 +257,6 @@ language.robot.Direction.West.__enum__ = language.robot.Direction;
 language.robot.Direction.NorthWest = ["NorthWest",7];
 language.robot.Direction.NorthWest.__enum__ = language.robot.Direction;
 language.robot.DirectionMethods = function() { };
-language.robot.DirectionMethods.__name__ = true;
 language.robot.DirectionMethods.rotate = function(d) {
 	switch(d[1]) {
 	case 0:
@@ -396,13 +297,13 @@ language.robot.DirectionMethods.meaning = function(d) {
 		return { x : -1, y : 1};
 	}
 };
-language.robot.Coef = { __ename__ : true, __constructs__ : ["Unit","Acc","Num"] };
+language.robot.Coef = { __constructs__ : ["Unit","Acc","Num"] };
 language.robot.Coef.Unit = ["Unit",0];
 language.robot.Coef.Unit.__enum__ = language.robot.Coef;
 language.robot.Coef.Acc = ["Acc",1];
 language.robot.Coef.Acc.__enum__ = language.robot.Coef;
 language.robot.Coef.Num = function(n) { var $x = ["Num",2,n]; $x.__enum__ = language.robot.Coef; return $x; };
-language.robot.Term = { __ename__ : true, __constructs__ : ["Fun","Test","Def","Block"] };
+language.robot.Term = { __constructs__ : ["Fun","Test","Def","Block"] };
 language.robot.Term.Fun = function(f) { var $x = ["Fun",0,f]; $x.__enum__ = language.robot.Term; return $x; };
 language.robot.Term.Test = function(b0,b1) { var $x = ["Test",1,b0,b1]; $x.__enum__ = language.robot.Term; return $x; };
 language.robot.Term.Def = function(f,b0,b1) { var $x = ["Def",2,f,b0,b1]; $x.__enum__ = language.robot.Term; return $x; };
@@ -425,7 +326,6 @@ language.robot.Robot = function(s,p) {
 	this.defs = new haxe.ds.StringMap();
 	this.cont = p;
 };
-language.robot.Robot.__name__ = true;
 language.robot.Robot.prototype = {
 	step: function() {
 		{
@@ -528,12 +428,11 @@ language.robot.Robot.prototype = {
 		}
 	}
 };
-language.robot.SList = { __ename__ : true, __constructs__ : ["Nil","Cons"] };
+language.robot.SList = { __constructs__ : ["Nil","Cons"] };
 language.robot.SList.Nil = ["Nil",0];
 language.robot.SList.Nil.__enum__ = language.robot.SList;
 language.robot.SList.Cons = function(x,xs) { var $x = ["Cons",1,x,xs]; $x.__enum__ = language.robot.SList; return $x; };
 language.robot.SListMethods = function() { };
-language.robot.SListMethods.__name__ = true;
 language.robot.SListMethods.append = function(a,b) {
 	switch(a[1]) {
 	case 0:
@@ -546,8 +445,6 @@ language.robot.SListMethods.append = function(a,b) {
 };
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
-String.__name__ = true;
-Array.__name__ = true;
 RobotPlayer.program = "dx(t(-x6rk+)(f))\ndk(t(-x2rk+)(f))\ndw(cxw)\nchn20j2r20j6ra-10+w";
 language.robot.Parser.digits = new EReg("^\\d+","");
 language.robot.Parser.func = new EReg("^[-+bce-su-z]$","");
