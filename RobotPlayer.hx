@@ -4,8 +4,8 @@ import haxe.Timer;
 import js.Browser;
 import js.html.TextAreaElement;
 import js.html.FormElement;
-import js.html.svg.SVGElement;
-import js.html.svg.LineElement;
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
 
 class RobotPlayer {
 	static var program = "dx(t(-x6rk+)(f))
@@ -13,13 +13,24 @@ dk(t(-x2rk+)(f))
 dw(cxw)
 chn20j2r20j6ra-10+w";
 
-	var svg : SVGElement;
+	var width : Int;
+	var height : Int;
+	var scale : Float;
+	var ctx : CanvasRenderingContext2D;
 	var ta : TextAreaElement;
 	var r : Robot;
 	var t : Timer;
 
 	function new() {
-		svg = cast(Browser.document.getElementById("robot"));
+		var canvas : CanvasElement = cast(Browser.document.getElementById("robot"));
+		ctx = canvas.getContext2d();
+		width = 100;
+		height = 100;
+		scale = canvas.width / width;
+		ctx.translate(canvas.width / 2, canvas.height / 2);
+		ctx.scale(scale, -scale);
+		ctx.strokeStyle = "black";
+		ctx.lineWidth = 1 / scale;
 		ta = cast(Browser.document.getElementById("program"));
 		var s = StringTools.urlDecode(Browser.location.search);
 		if (s.length > 0) {
@@ -47,18 +58,14 @@ chn20j2r20j6ra-10+w";
 	}
 
 	public function clear() : Void {
-		while (svg.firstChild != null) {
-			svg.removeChild(svg.firstChild);
-		}
+		ctx.clearRect(-width / 2, -height / 2, width, height);
 	}
 
 	public function line(x1 : Int, y1 : Int, x2 : Int, y2 : Int) : Void {
-		var l : LineElement = cast(Browser.document.createElementNS("http://www.w3.org/2000/svg", "line"));
-		var attrs = ["x1" => x1, "y1" => y1, "x2" => x2, "y2" => y2];
-		for (k in attrs.keys()) {
-			l.setAttribute(k, Std.string(attrs.get(k)));
-		}
-		svg.appendChild(l);
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
 	}
 
 	function run() {
