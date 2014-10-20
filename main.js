@@ -48,7 +48,8 @@ IMap.__name__ = true;
 var RobotPlayer = function() {
 	this.svg = window.document.getElementById("robot");
 	this.ta = window.document.getElementById("program");
-	this.ta.value = RobotPlayer.program;
+	var s = decodeURIComponent(window.location.search.split("+").join(" "));
+	if(s.length > 0) this.ta.value = HxOverrides.substr(s,1,null); else this.ta.value = RobotPlayer.program;
 	this.ta.addEventListener("change",$bind(this,this.onchange));
 	this.start();
 };
