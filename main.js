@@ -99,7 +99,9 @@ RobotPlayer.prototype = {
 		this.start();
 	}
 	,onTweetButtonClick: function(e) {
-		var p = encodeURIComponent(this.ta.value);
+		var s = this.ta.value;
+		if(s.length == 0 || s.charAt(s.length - 1) != "\n") s += "\n";
+		var p = encodeURIComponent(s);
 		var url = encodeURIComponent("https://mandel59.github.io/hxrobot/?" + p);
 		window.open("https://twitter.com/intent/tweet?text=" + p + "&url=" + url,"intent");
 	}
