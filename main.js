@@ -48,7 +48,10 @@ var RobotPlayer = function() {
 	this.ta = window.document.getElementById("program");
 	var s = decodeURIComponent(window.location.search.split("+").join(" "));
 	if(s.length > 0) this.ta.value = HxOverrides.substr(s,1,null); else this.ta.value = RobotPlayer.program;
-	this.ta.addEventListener("change",$bind(this,this.onchange));
+	this.run_button = window.document.getElementById("run");
+	this.run_button.addEventListener("click",$bind(this,this.onRunButtonClick));
+	this.tweet_button = window.document.getElementById("tweet");
+	this.tweet_button.addEventListener("click",$bind(this,this.onTweetButtonClick));
 	this.start();
 };
 RobotPlayer.onload = function(e) {
@@ -92,8 +95,13 @@ RobotPlayer.prototype = {
 			}
 		}
 	}
-	,onchange: function(e) {
+	,onRunButtonClick: function(e) {
 		this.start();
+	}
+	,onTweetButtonClick: function(e) {
+		var p = encodeURIComponent(this.ta.value);
+		var url = encodeURIComponent("https://mandel59.github.io/hxrobot/?" + p);
+		window.open("https://twitter.com/intent/tweet?text=" + p + "&url=" + url,"intent");
 	}
 };
 var Std = function() { };
