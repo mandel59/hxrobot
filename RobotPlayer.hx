@@ -88,7 +88,11 @@ chn20j2r20j6ra-10+w";
 	}
 
 	function onTweetButtonClick(e : Dynamic) {
-		var p = StringTools.urlEncode(ta.value);
+		var s = ta.value;
+		if (s.length == 0 || s.charAt(s.length - 1) != '\n') {
+			s += '\n';
+		}
+		var p = StringTools.urlEncode(s);
 		var url = StringTools.urlEncode('https://mandel59.github.io/hxrobot/?$p');
 		Browser.window.open('https://twitter.com/intent/tweet?text=$p&url=$url', 'intent');
 	}
