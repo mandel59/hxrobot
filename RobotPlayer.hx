@@ -3,7 +3,7 @@ import language.robot.Parser;
 import haxe.Timer;
 import js.Browser;
 import js.html.TextAreaElement;
-import js.html.FormElement;
+import js.html.InputElement;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 
@@ -18,6 +18,8 @@ chn20j2r20j6ra-10+w";
 	var scale : Float;
 	var ctx : CanvasRenderingContext2D;
 	var ta : TextAreaElement;
+	var run_button : InputElement;
+	var tweet_button : InputElement;
 	var r : Robot;
 	var t : Timer;
 
@@ -38,7 +40,10 @@ chn20j2r20j6ra-10+w";
 		} else {
 			ta.value = program;
 		}
-		ta.addEventListener("change", onchange);
+		run_button = cast(Browser.document.getElementById("run"));
+		run_button.addEventListener("click", onRunButtonClick);
+		tweet_button = cast(Browser.document.getElementById("tweet"));
+		tweet_button.addEventListener("click", onTweetButtonClick);
 		start();
 	}
 
@@ -78,8 +83,14 @@ chn20j2r20j6ra-10+w";
 		}
 	}
 
-	function onchange(e : Dynamic) {
+	function onRunButtonClick(e : Dynamic) {
 		start();
+	}
+
+	function onTweetButtonClick(e : Dynamic) {
+		var p = StringTools.urlEncode(ta.value);
+		var url = StringTools.urlEncode('https://mandel59.github.io/hxrobot/?$p');
+		Browser.window.open('https://twitter.com/intent/tweet?text=$p&url=$url', 'intent');
 	}
 
 	static function onload(e : Dynamic) {
