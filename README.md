@@ -8,7 +8,7 @@ HxRobot is a Robot Language interpreter written in Haxe. Write a frontend and sh
 
 A frontend is need to implement below methods:
 
-```
+```haxe
 typedef Screen = {
     // clear the screen
     function clear() : Void;
@@ -19,4 +19,4 @@ typedef Screen = {
 
 # References
 
--[Introduction of Robot Language by Takeoka@AXE](http://www.takeoka.org/~take/kvm/rob.html)
+* [Introduction of Robot Language by Takeoka@AXE](http://www.takeoka.org/~take/kvm/rob.html)
