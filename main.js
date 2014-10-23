@@ -13,10 +13,26 @@ EReg.prototype = {
 	,matched: function(n) {
 		if(this.r.m != null && n >= 0 && n < this.r.m.length) return this.r.m[n]; else throw "EReg::matched";
 	}
-	,matchedRight: function() {
+	,matchedPos: function() {
 		if(this.r.m == null) throw "No string matched";
-		var sz = this.r.m.index + this.r.m[0].length;
-		return this.r.s.substr(sz,this.r.s.length - sz);
+		return { pos : this.r.m.index, len : this.r.m[0].length};
+	}
+	,matchSub: function(s,pos,len) {
+		if(len == null) len = -1;
+		if(this.r.global) {
+			this.r.lastIndex = pos;
+			this.r.m = this.r.exec(len < 0?s:HxOverrides.substr(s,0,pos + len));
+			var b = this.r.m != null;
+			if(b) this.r.s = s;
+			return b;
+		} else {
+			var b1 = this.match(len < 0?HxOverrides.substr(s,pos,null):HxOverrides.substr(s,pos,len));
+			if(b1) {
+				this.r.s = s;
+				this.r.m.index += pos;
+			}
+			return b1;
+		}
 	}
 };
 var HxOverrides = function() { };
@@ -118,12 +134,6 @@ StringTools.isSpace = function(s,pos) {
 	var c = HxOverrides.cca(s,pos);
 	return c > 8 && c < 14 || c == 32;
 };
-StringTools.ltrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
-};
 var haxe = {};
 haxe.Timer = function(time_ms) {
 	var me = this;
@@ -164,60 +174,61 @@ var language = {};
 language.robot = {};
 language.robot.Parser = function() { };
 language.robot.Parser.parse = function(s) {
-	var st = language.robot.Parser.parseStmts(s);
-	if(StringTools.ltrim(st._1).length > 0) throw "syntax error";
+	var st = language.robot.Parser.parseStmts(new language.robot.StringPos(s,0));
+	if(st._1.ltrim().get_length() > 0) throw "syntax error";
 	return st._0;
 };
 language.robot.Parser.parseCoef = function(s) {
-	s = StringTools.ltrim(s);
-	if(s.length == 0) return haxe.ds.Option.None;
-	var _g = HxOverrides.cca(s,0);
+	s = s.ltrim();
+	if(s.get_length() == 0) return haxe.ds.Option.None;
+	var _g = HxOverrides.cca(s.str,s.pos);
 	var x = _g;
 	switch(_g) {
 	case 97:
-		return haxe.ds.Option.Some({ _0 : language.robot.Coef.Acc, _1 : HxOverrides.substr(s,1,null)});
+		return haxe.ds.Option.Some({ _0 : language.robot.Coef.Acc, _1 : new language.robot.StringPos(s.str,s.pos + 1)});
 	default:
 		if(48 <= x && x <= 57) {
-			language.robot.Parser.digits.match(s);
-			return haxe.ds.Option.Some({ _0 : language.robot.Coef.Num(Std.parseInt(language.robot.Parser.digits.matched(0))), _1 : language.robot.Parser.digits.matchedRight()});
+			var r = s.match(language.robot.Parser.digits);
+			var n = Std.parseInt(language.robot.Parser.digits.matched(0));
+			return haxe.ds.Option.Some({ _0 : language.robot.Coef.Num(n), _1 : r});
 		} else return haxe.ds.Option.Some({ _0 : language.robot.Coef.Unit, _1 : s});
 	}
 };
 language.robot.Parser.parseTerm = function(s) {
-	s = StringTools.ltrim(s);
-	if(s.length == 0) return haxe.ds.Option.None;
-	var _g = s.charAt(0);
+	s = s.ltrim();
+	if(s.get_length() == 0) return haxe.ds.Option.None;
+	var _g = s.str.charAt(s.pos);
 	var f = _g;
 	switch(_g) {
 	case "d":
-		var f1 = s.charAt(1);
+		var f1 = s.str.charAt(s.pos + 1);
 		if(!language.robot.Parser.func.match(f1)) return haxe.ds.Option.None;
-		if(s.charAt(2) != "(") return haxe.ds.Option.None;
-		var b0 = language.robot.Parser.parseStmts(HxOverrides.substr(s,3,null));
-		var b0_1 = StringTools.ltrim(b0._1);
-		if(b0_1.charAt(0) != ")") return haxe.ds.Option.None;
-		var b1 = language.robot.Parser.parseStmts(HxOverrides.substr(b0_1,1,null));
+		if(s.str.charAt(s.pos + 2) != "(") return haxe.ds.Option.None;
+		var b0 = language.robot.Parser.parseStmts(new language.robot.StringPos(s.str,s.pos + 3));
+		var b0_1 = b0._1.ltrim();
+		if(b0_1.str.charAt(b0_1.pos) != ")") return haxe.ds.Option.None;
+		var b1 = language.robot.Parser.parseStmts(new language.robot.StringPos(b0_1.str,b0_1.pos + 1));
 		return haxe.ds.Option.Some({ _0 : language.robot.Term.Def(f1,b0._0,b1._0), _1 : b1._1});
 	case "t":
-		if(s.charAt(1) != "(") return haxe.ds.Option.None;
-		var b01 = language.robot.Parser.parseStmts(HxOverrides.substr(s,2,null));
-		var b0_11 = StringTools.ltrim(b01._1);
-		if(b0_11.charAt(0) != ")") return haxe.ds.Option.None;
-		b0_11 = StringTools.ltrim(HxOverrides.substr(b0_11,1,null));
-		if(b0_11.charAt(0) != "(") return haxe.ds.Option.None;
-		var b11 = language.robot.Parser.parseStmts(HxOverrides.substr(b0_11,1,null));
-		var b1_1 = StringTools.ltrim(b11._1);
-		if(b1_1.charAt(0) != ")") return haxe.ds.Option.None;
-		return haxe.ds.Option.Some({ _0 : language.robot.Term.Test(b01._0,b11._0), _1 : HxOverrides.substr(b1_1,1,null)});
+		if(s.str.charAt(s.pos + 1) != "(") return haxe.ds.Option.None;
+		var b01 = language.robot.Parser.parseStmts(new language.robot.StringPos(s.str,s.pos + 2));
+		var b0_11 = b01._1.ltrim();
+		if(b0_11.str.charAt(b0_11.pos) != ")") return haxe.ds.Option.None;
+		b0_11 = new language.robot.StringPos(b0_11.str,b0_11.pos + 1).ltrim();
+		if(b0_11.str.charAt(b0_11.pos) != "(") return haxe.ds.Option.None;
+		var b11 = language.robot.Parser.parseStmts(new language.robot.StringPos(b0_11.str,b0_11.pos + 1));
+		var b1_1 = b11._1.ltrim();
+		if(b1_1.str.charAt(b1_1.pos) != ")") return haxe.ds.Option.None;
+		return haxe.ds.Option.Some({ _0 : language.robot.Term.Test(b01._0,b11._0), _1 : new language.robot.StringPos(b1_1.str,b1_1.pos + 1)});
 	case "(":
-		var b = language.robot.Parser.parseStmts(HxOverrides.substr(s,1,null));
-		var b_1 = StringTools.ltrim(b._1);
-		if(b_1.charAt(0) != ")") return haxe.ds.Option.None;
-		return haxe.ds.Option.Some({ _0 : language.robot.Term.Block(b._0), _1 : HxOverrides.substr(b_1,1,null)});
+		var b = language.robot.Parser.parseStmts(new language.robot.StringPos(s.str,s.pos + 1));
+		var b_1 = b._1.ltrim();
+		if(b_1.str.charAt(b_1.pos) != ")") return haxe.ds.Option.None;
+		return haxe.ds.Option.Some({ _0 : language.robot.Term.Block(b._0), _1 : new language.robot.StringPos(b_1.str,b_1.pos + 1)});
 	case ")":
 		return haxe.ds.Option.None;
 	default:
-		if(language.robot.Parser.func.match(f)) return haxe.ds.Option.Some({ _0 : language.robot.Term.Fun(f), _1 : HxOverrides.substr(s,1,null)}); else return haxe.ds.Option.None;
+		if(language.robot.Parser.func.match(f)) return haxe.ds.Option.Some({ _0 : language.robot.Term.Fun(f), _1 : new language.robot.StringPos(s.str,s.pos + 1)}); else return haxe.ds.Option.None;
 	}
 };
 language.robot.Parser.parseStatement = function(s) {
@@ -451,6 +462,37 @@ language.robot.SListMethods.append = function(a,b) {
 		var xs = a[3];
 		var x = a[2];
 		return language.robot.SList.Cons(x,language.robot.SListMethods.append(xs,b));
+	}
+};
+language.robot.StringPos = function(s,p) {
+	this.str = s;
+	this.pos = p;
+};
+language.robot.StringPos.prototype = {
+	get_length: function() {
+		return this.str.length - this.pos;
+	}
+	,ltrim: function() {
+		var p = this.pos;
+		while(p < this.str.length && StringTools.isSpace(this.str,p)) p++;
+		return new language.robot.StringPos(this.str,p);
+	}
+	,charCodeAt: function(p) {
+		return HxOverrides.cca(this.str,this.pos + p);
+	}
+	,charAt: function(p) {
+		return this.str.charAt(this.pos + p);
+	}
+	,advance: function(n) {
+		return new language.robot.StringPos(this.str,this.pos + n);
+	}
+	,match: function(e) {
+		e.matchSub(this.str,this.pos);
+		var p = e.matchedPos();
+		return new language.robot.StringPos(this.str,p.pos + p.len);
+	}
+	,toString: function() {
+		return HxOverrides.substr(this.str,this.pos,null);
 	}
 };
 var $_, $fid = 0;
