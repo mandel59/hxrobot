@@ -1,14 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Robot</title></head>
-<body><canvas id="robot" width="400" height="400"></canvas>
-<form id="program-form">
-<textarea id="program" rows="10" cols="40"></textarea>
-<div>
-<input id="run" type="button" value="Run">
-<input id="tweet" type="button" value="Tweet">
-</div>
-</form>
-<script src="main.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Robot</title>
+    <meta name="viewport" content="width=420">
+    <style>
+     @viewport {
+       width: 420px;
+     }
+     body {
+       margin: 10px;
+       padding: 0;
+     }
+    </style>
+  </head>
+  <body>
+    <canvas id="robot" width="400" height="400"></canvas>
+    <form id="program-form">
+      <textarea id="program" rows="10" cols="40"></textarea>
+      <div>
+        <input id="run" type="button" value="Run">
+        <input id="tweet" type="button" value="Tweet">
+      </div>
+    </form>
+    <script src="main.js"></script>
+  </body>
 </html>
