@@ -6,7 +6,7 @@
 
 HxRobot is a Robot Language interpreter written in Haxe. Write a frontend and ship the interpreter to various platforms!
 
-A frontend is need to implement below methods:
+A frontend is needed to implement below methods:
 
 ```haxe
 typedef Screen = {
